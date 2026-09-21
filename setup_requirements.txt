@@ -1,0 +1,2 @@
+osmnx
+psycopg2-binary
