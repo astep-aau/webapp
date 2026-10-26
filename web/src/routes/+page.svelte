@@ -13,7 +13,7 @@
       .tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
       .addTo(map);
 
-    const response = await fetch("http://localhost:5260/api/edges");
+    const response = await fetch("/api/edges");
     if (!response.ok) {
       throw new Error(`API error {response.status}: {response.Error}`);
     }

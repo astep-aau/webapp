@@ -6,3 +6,4 @@
 **/dist/
 **/appsettings*.json
 **/.env*
+web/.npmrc

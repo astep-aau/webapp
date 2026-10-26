@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-web
+  namespace: main
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp-web
+  template:
+    metadata:
+      labels:
+        app: webapp-web
+    spec:
+      containers:
+        - name: webapp-web
+          image: ghcr.io/astep-aau/webapp-web:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: HOST
+              value: 0.0.0.0
+            - name: PORT
+              value: "3000"
+            - name: ORIGIN
+              value: https://cs-astep02.srv.aau.dk
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-web
+  namespace: main
+spec:
+  selector:
+    app: webapp-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress
+  namespace: main
+  annotations:
+    traefik.ingress.kubernetes.io/router.priority: "10"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - cs-astep02.srv.aau.dk
+      secretName: cs-astep02-tls
+  rules:
+    - host: cs-astep02.srv.aau.dk
+      http:
+        paths:
+          - path: /webapp
+            pathType: Prefix
+            backend:
+              service:
+                name: webapp-web
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: webapp
+                port:
+                  number: 80

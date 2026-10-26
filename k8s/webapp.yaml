@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: webapp
-          image: ghcr.io/astep-aau/webapp:latest
+          image: ghcr.io/astep-aau/webapp-api:latest
           imagePullPolicy: Always
           ports:
             - name: http
