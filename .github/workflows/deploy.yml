@@ -49,18 +49,12 @@ jobs:
       - name: check permissions
         run: |
           kubectl auth whoami
-          kubectl auth can-i get deployments/webapp -n main
-          kubectl auth can-i patch deployments/webapp -n main
-          kubectl auth can-i get services/webapp -n main
-          kubectl auth can-i patch services/webapp -n main
+          kubectl auth can-i update deployments -n main
 
       - name: checkout
         uses: actions/checkout@v4
 
       - name: deploy
-        env:
-          IMAGE_TAG: ${{ github.sha }}
         run: |
-          sed -i "s|ghcr.io/astep-aau/webapp:latest|ghcr.io/astep-aau/webapp:${IMAGE_TAG}|" k8s/webapp.yaml
-          kubectl apply -f k8s/webapp.yaml
+          kubectl set image deployment/webapp webapp=ghcr.io/astep-aau/webapp:${{ github.sha }} -n main
           kubectl rollout status deployment/webapp -n main --timeout=5m
