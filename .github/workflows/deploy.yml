@@ -45,6 +45,8 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: self-hosted
+    env:
+      KUBECONFIG: /home/actions-runner/.kube/config
     steps:
       - name: check permissions
         run: |
