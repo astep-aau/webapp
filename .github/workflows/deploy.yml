@@ -49,10 +49,10 @@ jobs:
       - name: check permissions
         run: |
           kubectl auth whoami
-          kubectl auth can-i create deployments -n main
-          kubectl auth can-i patch deployments -n main
-          kubectl auth can-i create services -n main
-          kubectl auth can-i patch services -n main
+          kubectl auth can-i get deployments/webapp -n main
+          kubectl auth can-i patch deployments/webapp -n main
+          kubectl auth can-i get services/webapp -n main
+          kubectl auth can-i patch services/webapp -n main
 
       - name: checkout
         uses: actions/checkout@v4
