@@ -1,0 +1,8 @@
+.git/
+**/bin/
+**/obj/
+**/node_modules/
+**/.svelte-kit/
+**/dist/
+**/appsettings*.json
+**/.env*

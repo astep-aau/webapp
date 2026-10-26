@@ -1,0 +1,71 @@
+name: deploy
+
+on:
+  push:
+    branches: [production]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: build api
+        run: dotnet build api/api.csproj --configuration Release
+
+      - name: build web
+        working-directory: web
+        run: |
+          npm ci
+          npm run check
+          npm run build
+
+      - name: log in to ghcr
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: api/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/webapp:latest
+            ghcr.io/${{ github.repository_owner }}/webapp:${{ github.sha }}
+
+      - name: make package public
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api --method PATCH "/orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/webapp/visibility" --field visibility=public
+
+  deploy:
+    needs: build-and-push
+    runs-on: self-hosted
+    steps:
+      - name: check permissions
+        run: |
+          kubectl auth whoami
+          kubectl auth can-i create deployments -n main
+          kubectl auth can-i patch deployments -n main
+          kubectl auth can-i create services -n main
+          kubectl auth can-i patch services -n main
+
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: deploy
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          sed -i "s|ghcr.io/astep-aau/webapp:latest|ghcr.io/astep-aau/webapp:${IMAGE_TAG}|" k8s/webapp.yaml
+          kubectl apply -f k8s/webapp.yaml
+          kubectl rollout status deployment/webapp -n main --timeout=5m
