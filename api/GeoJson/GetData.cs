@@ -16,8 +16,10 @@ public static class GetData
 
         app.MapGet(
             "/api/edges",
-            async () =>
+            async (int page) =>
             {
+                if (page < 0) return Results.BadRequest();
+
                 await using var connection = new NpgsqlConnection(connectionString);
 
                 await connection.OpenAsync();
@@ -25,11 +27,16 @@ public static class GetData
                 await using var command = new NpgsqlCommand(
                     """
                     SELECT ST_AsGeoJSON(ST_Collect(geometry))
-                    FROM public.osm_edges;
+                    FROM (
+                        SELECT geometry FROM public.osm_edges
+                        ORDER BY fid
+                        LIMIT 5000 OFFSET @offset
+                    ) AS edges;
                     """,
                     connection
                 );
 
+                command.Parameters.AddWithValue("offset", (long)page * 5000);
                 var geoJson = await command.ExecuteScalarAsync() as string;
 
                 if (geoJson is null) return Results.NoContent();

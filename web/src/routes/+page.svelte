@@ -7,21 +7,22 @@
   onMount(async () => {
     const leaflet = await import("leaflet");
 
-    const map = leaflet.map(mapElement, { preferCanvas: true }).setView([39.9042, 116.4074], 10);
+    const map = leaflet.map(mapElement).setView([39.9042, 116.4074], 10);
 
     leaflet
       .tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
       .addTo(map);
 
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/edges`);
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+    for (let page = 0; ; page++) {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/edges?page=${page}`);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      if (response.status === 204) break;
+
+      const edges = await response.json();
+      leaflet.geoJSON(edges).addTo(map);
     }
-    if (response.status === 204) return;
-
-    const edges = await response.json();
-
-    leaflet.geoJSON(edges).addTo(map);
   });
 </script>
 
