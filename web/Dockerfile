@@ -3,6 +3,7 @@ WORKDIR /app
 COPY web/package*.json ./
 RUN npm ci
 COPY web/ ./
+ARG VITE_API_URL=""
 RUN npm run check && npm run build
 
 FROM node:22-alpine

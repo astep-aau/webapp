@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: webapp
+  name: webapp-api
   namespace: main
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: webapp
+      app: webapp-api
   template:
     metadata:
       labels:
-        app: webapp
+        app: webapp-api
     spec:
       containers:
-        - name: webapp
+        - name: webapp-api
           image: ghcr.io/astep-aau/webapp-api:latest
           imagePullPolicy: Always
           ports:
@@ -24,7 +24,9 @@ spec:
             - name: ASPNETCORE_HTTP_PORTS
               value: "8080"
             - name: POSTGRES_HOST
-              value: postgres.main.svc.cluster.local
+              value: dataset-postgres.main.svc.cluster.local
+            - name: POSTGRES_PORT
+              value: "5432"
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
@@ -61,11 +63,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: webapp
+  name: webapp-api
   namespace: main
 spec:
   selector:
-    app: webapp
+    app: webapp-api
   ports:
     - name: http
       port: 80

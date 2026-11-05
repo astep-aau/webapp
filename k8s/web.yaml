@@ -89,6 +89,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: webapp
+                name: webapp-api
                 port:
                   number: 80

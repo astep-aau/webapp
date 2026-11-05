@@ -68,7 +68,9 @@ jobs:
 
       - name: deploy
         run: |
-          kubectl set image deployment/webapp webapp=ghcr.io/astep-aau/webapp-api:${{ github.sha }} -n main
-          kubectl rollout status deployment/webapp -n main --timeout=5m
+          kubectl apply -f k8s/api.yaml
+          kubectl set image deployment/webapp-api webapp-api=ghcr.io/astep-aau/webapp-api:${{ github.sha }} -n main
+          kubectl rollout status deployment/webapp-api -n main --timeout=5m
+          kubectl apply -f k8s/web.yaml
           kubectl set image deployment/webapp-web webapp-web=ghcr.io/astep-aau/webapp-web:${{ github.sha }} -n main
           kubectl rollout status deployment/webapp-web -n main --timeout=5m

@@ -7,16 +7,17 @@
   onMount(async () => {
     const leaflet = await import("leaflet");
 
-    const map = leaflet.map(mapElement).setView([30.5, 104], 10);
+    const map = leaflet.map(mapElement).setView([39.9042, 116.4074], 10);
 
     leaflet
       .tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
       .addTo(map);
 
-    const response = await fetch("/api/edges");
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/edges`);
     if (!response.ok) {
-      throw new Error(`API error {response.status}: {response.Error}`);
+      throw new Error(`API error: ${response.status}`);
     }
+    if (response.status === 204) return;
 
     const edges = await response.json();
 
@@ -24,7 +25,7 @@
   });
 </script>
 
-<h1>Chengdu China</h1>
+<h1>Beijing China</h1>
 
 <div class="map" bind:this={mapElement}></div>
 

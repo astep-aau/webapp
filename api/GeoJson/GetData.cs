@@ -5,23 +5,14 @@ public static class GetData
     public static void Map(WebApplication app)
     {
         var configuration = app.Configuration;
-        var connectionString = configuration.GetConnectionString("Postgres");
-
-        if (configuration["POSTGRES_HOST"] is { Length: > 0 } host)
+        var connectionString = new NpgsqlConnectionStringBuilder
         {
-            connectionString = new NpgsqlConnectionStringBuilder
-            {
-                Host = host,
-                Database = configuration["POSTGRES_DB"],
-                Username = configuration["POSTGRES_USER"],
-                Password = configuration["POSTGRES_PASSWORD"]
-            }.ConnectionString;
-        }
-
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new InvalidOperationException("Postgres connection settings are required.");
-        }
+            Host = configuration["POSTGRES_HOST"] ?? throw new InvalidOperationException("POSTGRES_HOST is required."),
+            Port = int.Parse(configuration["POSTGRES_PORT"] ?? throw new InvalidOperationException("POSTGRES_PORT is required.")),
+            Database = configuration["POSTGRES_DB"] ?? throw new InvalidOperationException("POSTGRES_DB is required."),
+            Username = configuration["POSTGRES_USER"] ?? throw new InvalidOperationException("POSTGRES_USER is required."),
+            Password = configuration["POSTGRES_PASSWORD"] ?? throw new InvalidOperationException("POSTGRES_PASSWORD is required.")
+        }.ConnectionString;
 
         app.MapGet(
             "/api/edges",
@@ -39,9 +30,10 @@ public static class GetData
                     connection
                 );
 
-                var geoJson = (string?)await command.ExecuteScalarAsync();
+                var geoJson = await command.ExecuteScalarAsync() as string;
 
-                return Results.Content(geoJson ?? "No GeoJson...");
+                if (geoJson is null) return Results.NoContent();
+                return Results.Content(geoJson, "application/geo+json");
             }
         );
     }
