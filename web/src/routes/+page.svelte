@@ -7,7 +7,7 @@
   onMount(async () => {
     const leaflet = await import("leaflet");
 
-    const map = leaflet.map(mapElement).setView([39.9042, 116.4074], 10);
+    const map = leaflet.map(mapElement, { preferCanvas: true }).setView([39.9042, 116.4074], 10);
 
     leaflet
       .tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
